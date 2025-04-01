@@ -1,25 +1,27 @@
 // For more information, see https://crawlee.dev/
-import { PlaywrightCrawler } from 'crawlee';
+import { PlaywrightCrawler } from "crawlee";
 
 // PlaywrightCrawler crawls the web using a headless
 // browser controlled by the Playwright library.
 const crawler = new PlaywrightCrawler({
-    // Use the requestHandler to process each of the crawled pages.
-    async requestHandler({ request, page, enqueueLinks, log, pushData }) {
-        const title = await page.title();
-        log.info(`Title of ${request.loadedUrl} is '${title}'`);
+  // Use the requestHandler to process each of the crawled pages.
+  async requestHandler({ request, page, enqueueLinks, log, pushData }) {
+    const offers = page.locator("#aod-offer");
+    log.info(`Found ${await offers.count()} offers on ${request.url}`);
 
-        // Save results as JSON to ./storage/datasets/default
-        await pushData({ title, url: request.loadedUrl });
+    const innerTexts = await (
+      await offers.allInnerTexts()
+    ).map((t) => t.match(/£\d+\.\d{2}/));
 
-        // Extract links from the current page
-        // and add them to the crawling queue.
-        await enqueueLinks();
-    },
-    // Comment this option to scrape the full website.
-    maxRequestsPerCrawl: 20,
-    headless: false,
+    pushData({
+      url: request.url,
+      offers: innerTexts.filter((t) => t !== null)
+    });
+  },
+  // Comment this option to scrape the full website.
+  maxRequestsPerCrawl: 20,
+  requestHandlerTimeoutSecs: 10
 });
 
 // Add first URL to the queue and start the crawl.
-await crawler.run(['https://crawlee.dev']);
+await crawler.run(["https://www.amazon.co.uk/dp/B0CGRMJF6C?aod=1"]);
