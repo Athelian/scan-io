@@ -15,6 +15,7 @@ const crawler = new PlaywrightCrawler({
 
     pushData({
       url: request.url,
+      title: await page.title(),
       offers: innerTexts.filter((t) => t !== null)
     });
   },
