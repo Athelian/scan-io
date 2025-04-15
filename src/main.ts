@@ -5,13 +5,22 @@ import { PlaywrightCrawler } from "crawlee";
 // browser controlled by the Playwright library.
 const crawler = new PlaywrightCrawler({
   // Use the requestHandler to process each of the crawled pages.
-  async requestHandler({ request, page, enqueueLinks, log, pushData }) {
+  async requestHandler({ request, page, log, pushData }) {
     const offers = page.locator("#aod-offer");
     log.info(`Found ${await offers.count()} offers on ${request.url}`);
+
+    log.info(page.url());
 
     const innerTexts = await (
       await offers.allInnerTexts()
     ).map((t) => t.match(/£\d+\.\d{2}/));
+
+    const content = await page.content();
+
+    const isCaptcha = await page.$("input#captchacharacters");
+    if (isCaptcha) {
+      console.log("CAPTCHA detected based on input field.");
+    }
 
     pushData({
       url: request.url,
@@ -19,10 +28,11 @@ const crawler = new PlaywrightCrawler({
       offers: innerTexts.filter((t) => t !== null)
     });
   },
-  // Comment this option to scrape the full website.
-  maxRequestsPerCrawl: 20,
-  requestHandlerTimeoutSecs: 10
+  requestHandlerTimeoutSecs: 60
 });
 
 // Add first URL to the queue and start the crawl.
-await crawler.run(["https://www.amazon.co.uk/dp/B0CGRMJF6C?aod=1"]);
+await crawler.run([
+  "https://amzn.eu/d/6pXprpd?aod=1",
+  "https://amzn.eu/d/9KvWllb?aod=1"
+]);
