@@ -15,11 +15,9 @@ const crawler = new PlaywrightCrawler({
       await offers.allInnerTexts()
     ).map((t) => t.match(/£\d+\.\d{2}/));
 
-    const content = await page.content();
-
     const isCaptcha = await page.$("input#captchacharacters");
     if (isCaptcha) {
-      console.log("CAPTCHA detected based on input field.");
+      throw new Error("Captcha detected");
     }
 
     pushData({
@@ -33,6 +31,6 @@ const crawler = new PlaywrightCrawler({
 
 // Add first URL to the queue and start the crawl.
 await crawler.run([
-  "https://amzn.eu/d/6pXprpd?aod=1",
+  // "https://amzn.eu/d/6pXprpd?aod=1",
   "https://amzn.eu/d/9KvWllb?aod=1"
 ]);
